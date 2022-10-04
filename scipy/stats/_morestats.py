@@ -1836,7 +1836,7 @@ AndersonResult = _make_tuple_bunch('AndersonResult',
                                     'significance_level'], ['fit_result'])
 
 
-def anderson(x, dist='norm'):
+def anderson(x, dist='norm', standard_norm = False):
     """Anderson-Darling test for data coming from a particular distribution.
 
     The Anderson-Darling test tests the null hypothesis that a sample is
@@ -1854,6 +1854,9 @@ def anderson(x, dist='norm'):
         The type of distribution to test against.  The default is 'norm'.
         The names 'extreme1', 'gumbel_l' and 'gumbel' are synonyms for the
         same distribution.
+    standard_norm : Boolean
+        Flag to assess based on standard normal distribution with mean 0 and std 1,
+        rather than using sample mean and standard deviation.
 
     Returns
     -------
@@ -1918,10 +1921,20 @@ def anderson(x, dist='norm'):
     if dist not in dists:
         raise ValueError(f"Invalid distribution; dist must be in {dists}.")
     y = sort(x)
-    xbar = np.mean(x, axis=0)
+    if standard_norm == True:
+        if dist != 'norm':
+            raise ValueError(f"Standard normal distribution flag should only "
+                             "be True if dist = 'norm'. Current dist = {dist}"
+                             )
+        xbar = 0
+    else:
+        xbar = np.mean(x, axis=0)
     N = len(y)
     if dist == 'norm':
-        s = np.std(x, ddof=1, axis=0)
+        if standard_norm == True:
+            s = 1
+        else:
+            s = np.std(x, ddof=1, axis=0)
         w = (y - xbar) / s
         fit_params = xbar, s
         logcdf = distributions.norm.logcdf(w)
